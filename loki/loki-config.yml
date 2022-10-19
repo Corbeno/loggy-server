@@ -1,0 +1,57 @@
+auth_enabled: false 
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+common:
+  path_prefix: /tmp/loki
+  storage:
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
+  replication_factor: 1
+  ring:
+    instance_addr: 127.0.0.1
+    kvstore:
+      store: inmemory
+
+# storage_config:
+#   filesystem:
+#     directory: /tmp/loki/
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+ruler:
+  alertmanager_url: http://localhost:9093
+  storage:
+    type: local
+    local:
+      directory: /loki/data/ruler
+  ring:
+    kvstore:
+      store: inmemory
+  enable_api: true
+
+frontend: 
+  address: 127.0.0.1
+  max_outstanding_per_tenant: 2048
+
+query_scheduler:
+  # Very important to not have query bottlenecks in the frontend. Why this is set to low default is beyond me...
+  max_outstanding_requests_per_tenant: 2048
+
+query_range:
+  parallelise_shardable_queries: false
+  
+  # Very important. Prevents splitting up queries into multiple requests, essentially spamming the service.
+  # Good to set to 0 with single instance grafana setups
+  split_queries_by_interval: 0
