@@ -1,0 +1,38 @@
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+   - url: http://username:password@loki:3100/loki/api/v1/push
+
+scrape_configs:
+# local machine logs
+- job_name: local
+  static_configs:
+  - targets:
+      - localhost
+    labels: #custom labels 
+      __path__: /var/log/*.log
+      job: varlogs
+      host: loggy
+
+# Other options, probably not needed though
+## docker logs
+#- job_name: docker 
+#  pipeline_stages:
+#    - docker: {}
+#  static_configs:
+#    - labels:
+#        job: docker
+#        __path__: /var/lib/docker/containers/*/*-json.log
+
+# syslog target
+#- job_name: syslog
+#  syslog:
+#    listen_address: 0.0.0.0:1514 # make sure you also expose this port on the container
+#    idle_timeout: 60s
+#    label_structured_data: yes
+#    labels:
+#      job: "syslog"
+#  relabel_configs:
+#    - source_labels: ['__syslog_message_hostname']
+#      target_label: 'host'

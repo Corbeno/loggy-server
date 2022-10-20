@@ -1,1 +1,88 @@
-test
+version: "3"
+services:
+  #Reverse proxy. All traffic flows through this
+  nginx:
+      container_name: nginx
+      image: nginx
+      restart: unless-stopped
+      user: ${USER_ID:-1000}
+      ports:
+         - 80:80
+         - 443:443
+         - 3101:3101
+      volumes:
+         - ./nginx:/etc/nginx
+         - ./nginx/certificates:/etc/nginx/certificates/
+      # environment:
+         #     HTTP_PROXY: "http://199.100.16.100:3128"
+         #     HTTPS_PROXY: "http://199.100.16.100:3128"
+         # no_proxy: "localhost, 127.0.0.0/8, loki"
+      networks:
+         - loki
+  
+  #logs get sent here
+  loki:
+    container_name: "loki"
+    image: grafana/loki:2.5.0
+    restart: unless-stopped
+    user: ${USER_ID:-1000}
+    volumes:
+      - ./loki:/etc/loki
+      - ./loki/rules:/loki/data/ruler/fake/
+      - ./loki/data:/tmp/loki/
+    # environment:
+        # HTTP_PROXY: "http://199.100.16.100:3128"
+        # HTTPS_PROXY: "http://199.100.16.100:3128"
+        # NO_PROXY: "localhost, 127.0.0.0/8, loki"
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+    - loki
+    logging:
+       driver: "json-file"
+
+  #GUI for viewing logs
+  grafana:
+      container_name: grafana
+      image: grafana/grafana:latest
+      restart: unless-stopped
+      user: ${USER_ID:-1000}
+      depends_on: #TODO necessary?
+      - loki
+      volumes:
+        - ./grafana:/var/lib/grafana
+      environment:
+        # GF_<SectionName>_<KeyName>
+        # if behind a proxy, these two need to be used
+        #GF_SERVER_ROOT_URL: 'https://192.168.1.2'
+        #GF_SERVER_SERVE_FROM_SUB_PATH: 'false'
+        #GF_SERVER_DOMAIN: ''
+        GF_DATAPROXY_MAX_IDLE_CONNECTIONS: '1000'
+        # HTTP_PROXY: "http://199.100.16.100:3128"
+        # HTTPS_PROXY: "http://199.100.16.100:3128"
+        # NO_PROXY: "localhost, 127.0.0.0/8, loki, host.docker.internal"
+      networks:
+      - loki
+  
+  #sends logs to loki
+  promtail:
+    container_name: "promtail"
+    image: grafana/promtail:2.4.0
+    restart: unless-stopped
+    user: ${USER_ID:-1000}
+    depends_on:
+    - loki
+    volumes:
+      - /var/log:/var/log
+      - ./promtail:/etc/promtail
+    # environment:
+        # HTTP_PROXY: "http://199.100.16.100:3128"
+        # HTTPS_PROXY: "http://199.100.16.100:3128"
+        # NO_PROXY: "localhost, 127.0.0.0/8, loki"
+    command: -config.file=/etc/promtail/promtail-config.yml
+    networks:
+      - loki
+    logging: 
+       driver: "json-file"
+
+networks:
+   loki:
