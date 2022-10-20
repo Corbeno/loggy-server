@@ -5,6 +5,9 @@
 
 # 2. Create password for http auth
 # sudo htpasswd -c nginx/passwords loggy
+
+# 3. lock down .env file
+# sudo chmod 660 .env
 version: "3"
 services:
   #Reverse proxy. All traffic flows through this
@@ -21,9 +24,9 @@ services:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
       # environment:
-         #     HTTP_PROXY: "http://199.100.16.100:3128"
-         #     HTTPS_PROXY: "http://199.100.16.100:3128"
-         # no_proxy: "localhost, 127.0.0.0/8, loki"
+      #   HTTP_PROXY: "http://199.100.16.100:3128"
+      #   HTTPS_PROXY: "http://199.100.16.100:3128"
+      #   no_proxy: "localhost, 127.0.0.0/8, loki"
       networks:
          - loki
   
@@ -35,7 +38,6 @@ services:
     user: ${USER_ID:-1000}
     volumes:
       - ./loki:/etc/loki
-      # - ./loki/rules:/loki/data/ruler/fake/
       - ./loki/data:/tmp/loki/
     # environment:
         # HTTP_PROXY: "http://199.100.16.100:3128"
@@ -53,8 +55,6 @@ services:
       image: grafana/grafana:latest
       restart: unless-stopped
       user: ${USER_ID:-1000}
-      # depends_on: #TODO necessary?
-      # - loki
       volumes:
         - ./grafana:/var/lib/grafana
       environment:
@@ -85,7 +85,7 @@ services:
         # HTTP_PROXY: "http://199.100.16.100:3128"
         # HTTPS_PROXY: "http://199.100.16.100:3128"
         # NO_PROXY: "localhost, 127.0.0.0/8, loki"
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
     networks:
       - loki
     logging: 

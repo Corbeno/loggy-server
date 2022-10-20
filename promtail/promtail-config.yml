@@ -2,7 +2,7 @@ positions:
   filename: /tmp/positions.yaml
 
 clients:
-   - url: http://loggy:1234@loki:3100/loki/api/v1/push
+   - url: http://${HTTP_AUTH_USERNAME}:${HTTP_AUTH_PASSWORD}@loki:3100/loki/api/v1/push
 
 scrape_configs:
 # local machine logs
