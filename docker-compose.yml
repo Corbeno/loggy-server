@@ -1,3 +1,10 @@
+# prereq: install: apache2-utils
+# before this is run do:
+# 1. create cert for nginx: 
+# sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/certificates/nginx.key -out nginx/certificates/nginx.crt
+
+# 2. Create password for http auth
+# sudo htpasswd -c nginx/passwords loggy
 version: "3"
 services:
   #Reverse proxy. All traffic flows through this
@@ -5,11 +12,11 @@ services:
       container_name: nginx
       image: nginx
       restart: unless-stopped
-      user: ${USER_ID:-1000}
+      # user: ${USER_ID:-1000}
       ports:
          - 80:80
          - 443:443
-         - 3101:3101
+         - 3100:3100
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
@@ -28,7 +35,7 @@ services:
     user: ${USER_ID:-1000}
     volumes:
       - ./loki:/etc/loki
-      - ./loki/rules:/loki/data/ruler/fake/
+      # - ./loki/rules:/loki/data/ruler/fake/
       - ./loki/data:/tmp/loki/
     # environment:
         # HTTP_PROXY: "http://199.100.16.100:3128"
@@ -46,8 +53,8 @@ services:
       image: grafana/grafana:latest
       restart: unless-stopped
       user: ${USER_ID:-1000}
-      depends_on: #TODO necessary?
-      - loki
+      # depends_on: #TODO necessary?
+      # - loki
       volumes:
         - ./grafana:/var/lib/grafana
       environment:
@@ -68,7 +75,7 @@ services:
     container_name: "promtail"
     image: grafana/promtail:2.4.0
     restart: unless-stopped
-    user: ${USER_ID:-1000}
+    # user: ${USER_ID:-1000}
     depends_on:
     - loki
     volumes:
