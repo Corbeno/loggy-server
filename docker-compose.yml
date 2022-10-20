@@ -15,7 +15,6 @@ services:
       container_name: nginx
       image: nginx
       restart: unless-stopped
-      # user: ${USER_ID:-1000}
       ports:
          - 80:80
          - 443:443
@@ -23,10 +22,10 @@ services:
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
-      # environment:
-      #   HTTP_PROXY: "http://199.100.16.100:3128"
-      #   HTTPS_PROXY: "http://199.100.16.100:3128"
-      #   no_proxy: "localhost, 127.0.0.0/8, loki"
+      environment:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - no_proxy
       networks:
          - loki
   
@@ -39,10 +38,10 @@ services:
     volumes:
       - ./loki:/etc/loki
       - ./loki/data:/tmp/loki/
-    # environment:
-        # HTTP_PROXY: "http://199.100.16.100:3128"
-        # HTTPS_PROXY: "http://199.100.16.100:3128"
-        # NO_PROXY: "localhost, 127.0.0.0/8, loki"
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - no_proxy
     command: -config.file=/etc/loki/loki-config.yml
     networks:
     - loki
@@ -64,9 +63,9 @@ services:
         #GF_SERVER_SERVE_FROM_SUB_PATH: 'false'
         #GF_SERVER_DOMAIN: ''
         GF_DATAPROXY_MAX_IDLE_CONNECTIONS: '1000'
-        # HTTP_PROXY: "http://199.100.16.100:3128"
-        # HTTPS_PROXY: "http://199.100.16.100:3128"
-        # NO_PROXY: "localhost, 127.0.0.0/8, loki, host.docker.internal"
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        no_proxy: ${no_proxy:-}
       networks:
       - loki
   
@@ -75,16 +74,15 @@ services:
     container_name: "promtail"
     image: grafana/promtail:2.4.0
     restart: unless-stopped
-    # user: ${USER_ID:-1000}
     depends_on:
     - loki
     volumes:
       - /var/log:/var/log
       - ./promtail:/etc/promtail
-    # environment:
-        # HTTP_PROXY: "http://199.100.16.100:3128"
-        # HTTPS_PROXY: "http://199.100.16.100:3128"
-        # NO_PROXY: "localhost, 127.0.0.0/8, loki"
+    environment:
+      - HTTP_PROXY
+      - HTTPS_PROXY
+      - no_proxy
     command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
     networks:
       - loki
