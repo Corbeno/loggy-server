@@ -13,8 +13,12 @@ version: "3"
 x-logging: &default-logging
   driver: "json-file"
   options:
-    tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+    tag: "{{.Name}}"
 
+x-environment: &default-env
+  - HTTP_PROXY
+  - HTTPS_PROXY
+  - no_proxy
 
 services:
   #Reverse proxy. All traffic flows through this
@@ -29,10 +33,7 @@ services:
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
-      environment:
-        - HTTP_PROXY
-        - HTTPS_PROXY
-        - no_proxy
+      environment: *default-env
       networks:
          - loki
       logging: *default-logging
@@ -46,10 +47,7 @@ services:
     volumes:
       - ./loki:/etc/loki
       - ./loki/data:/tmp/loki/
-    environment:
-      - HTTP_PROXY
-      - HTTPS_PROXY
-      - no_proxy
+    environment: *default-env
     command: -config.file=/etc/loki/loki-config.yml
     networks:
     - loki
@@ -88,10 +86,7 @@ services:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail:/etc/promtail
-    environment:
-      - HTTP_PROXY
-      - HTTPS_PROXY
-      - no_proxy
+    environment: *default-env
     command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
     networks:
       - loki
