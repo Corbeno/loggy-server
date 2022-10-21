@@ -9,6 +9,13 @@
 # 3. lock down .env file
 # sudo chmod 660 .env
 version: "3"
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+
+
 services:
   #Reverse proxy. All traffic flows through this
   nginx:
@@ -28,6 +35,7 @@ services:
         - no_proxy
       networks:
          - loki
+      logging: *default-logging
   
   #logs get sent here
   loki:
@@ -45,8 +53,7 @@ services:
     command: -config.file=/etc/loki/loki-config.yml
     networks:
     - loki
-    logging:
-       driver: "json-file"
+    logging: *default-logging
 
   #GUI for viewing logs
   grafana:
@@ -68,6 +75,7 @@ services:
         no_proxy: ${no_proxy:-}
       networks:
       - loki
+      logging: *default-logging
   
   #sends logs to loki
   promtail:
@@ -78,6 +86,7 @@ services:
     - loki
     volumes:
       - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail:/etc/promtail
     environment:
       - HTTP_PROXY
@@ -86,8 +95,7 @@ services:
     command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
     networks:
       - loki
-    logging: 
-       driver: "json-file"
+    logging: *default-logging
 
 networks:
    loki:

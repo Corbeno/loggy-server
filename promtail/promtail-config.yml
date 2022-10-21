@@ -12,14 +12,16 @@ scrape_configs:
       - localhost
     labels: #custom labels 
       __path__: /var/log/**/*.log
+      all: all
       job: varlogs
-      host: ${HOSTNAME}
+      host: loggy
 
 - job_name: containers
   static_configs:
   - targets:
       - localhost
     labels:
+      all: all
       job: containerlogs
       __path__: /var/lib/docker/containers/*/*log
 
@@ -36,33 +38,13 @@ scrape_configs:
   - regex:
       expression: (?P<container_name>(?:[^|]*[^|]))
       source: tag
+  - labels:
+      stream:
+      container_name:
+  - labeldrop: # dont include filename in docker logs.. it's too messy
+    - filename
   - timestamp:
       format: RFC3339Nano
       source: time
-  - labels:
-      # tag:
-      stream:
-      container_name:
   - output:
       source: output
-# Other options, probably not needed though
-## docker logs
-#- job_name: docker 
-#  pipeline_stages:
-#    - docker: {}
-#  static_configs:
-#    - labels:
-#        job: docker
-#        __path__: /var/lib/docker/containers/*/*-json.log
-
-# syslog target
-#- job_name: syslog
-#  syslog:
-#    listen_address: 0.0.0.0:1514 # make sure you also expose this port on the container
-#    idle_timeout: 60s
-#    label_structured_data: yes
-#    labels:
-#      job: "syslog"
-#  relabel_configs:
-#    - source_labels: ['__syslog_message_hostname']
-#      target_label: 'host'
