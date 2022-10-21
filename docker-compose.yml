@@ -1,6 +1,6 @@
 # prereq: install: apache2-utils
 # before this is run do:
-# 1. create cert for nginx: 
+# 1. create self signed cert for nginx: 
 # sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/certificates/nginx.key -out nginx/certificates/nginx.crt
 
 # 2. Create password for http auth
