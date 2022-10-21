@@ -1,24 +1,9 @@
-# prereq: install: apache2-utils
-# before this is run do:
-# 1. create self signed cert for nginx: 
-# sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout nginx/certificates/nginx.key -out nginx/certificates/nginx.crt
-
-# 2. Create password for http auth
-# sudo htpasswd -c nginx/passwords loggy
-
-# 3. lock down .env file
-# sudo chmod 660 .env
 version: "3"
 
 x-logging: &default-logging
   driver: "json-file"
   options:
     tag: "{{.Name}}"
-
-x-environment: &default-env
-  - HTTP_PROXY
-  - HTTPS_PROXY
-  - no_proxy
 
 services:
   #Reverse proxy. All traffic flows through this
@@ -33,7 +18,6 @@ services:
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
-      environment: *default-env
       networks:
          - loki
       logging: *default-logging
@@ -47,7 +31,6 @@ services:
     volumes:
       - ./loki:/etc/loki
       - ./loki/data:/tmp/loki/
-    environment: *default-env
     command: -config.file=/etc/loki/loki-config.yml
     networks:
     - loki
@@ -63,14 +46,7 @@ services:
         - ./grafana:/var/lib/grafana
       environment:
         # GF_<SectionName>_<KeyName>
-        # if behind a proxy, these two need to be used
-        #GF_SERVER_ROOT_URL: 'https://192.168.1.2'
-        #GF_SERVER_SERVE_FROM_SUB_PATH: 'false'
-        #GF_SERVER_DOMAIN: ''
         GF_DATAPROXY_MAX_IDLE_CONNECTIONS: '1000'
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        no_proxy: ${no_proxy:-}
       networks:
       - loki
       logging: *default-logging
@@ -86,7 +62,6 @@ services:
       - /var/log:/var/log
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail:/etc/promtail
-    environment: *default-env
     command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
     networks:
       - loki

@@ -10,7 +10,7 @@ It is simply a git repo with a docker-compose file and a bunch of pre-created di
 
  Prerequisites 
 - Create a new VM. Ubuntu server works best as it was used to make this guide
--  Make sure the hostname of the VM is set. I like to pick "Loggy"
+-  Make sure the hostname of the VM is set. I like to pick "loggy"
 
 
 1. Install docker
@@ -18,7 +18,7 @@ It is simply a git repo with a docker-compose file and a bunch of pre-created di
 sudo apt install docker.io -y
 ```
    
-   If using a proxy, configure docker to use it
+If using a proxy, configure docker to use it
 ```bash
 sudo systemctl edit docker.service
 ```
@@ -73,8 +73,10 @@ sudo htpasswd -c nginx/passwords loggy
 > Note: You can change "loggy" to whatever you want, as long as it matches in the .env file
 
   
-7. Update .env file
-   
+7. Update .env file and update anything with "TODO" next to it
+```bash
+vim .env
+```
    
 8. Lock down .env file
 ```bash
@@ -85,9 +87,10 @@ sudo chmod 660 .env
 ```bash
 docker-compose up -d
 ```
-
+> Note: You can run the above command without -d to see the live output for debugging
 
 
 
 # Notes
 Any passwords that are required to run should be put in .env. Any other config file should be considered readable by anyone. 
+
