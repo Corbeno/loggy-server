@@ -5,6 +5,9 @@ x-logging: &default-logging
   options:
     tag: "{{.Name}}"
 
+x-networks: &default-networks
+  - loki
+
 services:
   #Reverse proxy. All traffic flows through this
   nginx:
@@ -16,7 +19,8 @@ services:
          - 443:443
          - 3100:3100 # Loki
          - 9090:9090 # Prometheus
-        #  - 9110:9110 # Node exporter
+         - 9100:9100 # Node exporter could delete too
+         - 8080:8080 # delete probably, as nginx status is only needed internally
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
@@ -49,8 +53,7 @@ services:
       environment:
         # GF_<SectionName>_<KeyName>
         GF_DATAPROXY_MAX_IDLE_CONNECTIONS: '1000'
-      networks:
-      - loki
+      networks: *default-networks
       logging: *default-logging
   
   #sends logs to loki
@@ -65,8 +68,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - ./promtail:/etc/promtail
     command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
-    networks:
-      - loki
+    networks: *default-networks
     logging: *default-logging
 
   # handles metrics
@@ -80,21 +82,32 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus
       - ./prometheus/data:/prometheus/data
-    networks:
-      - loki
+    networks: *default-networks
     logging: *default-logging
 
+  # exposes local metrics
   node-exporter:
     container_name: node-exporter
     image: quay.io/prometheus/node-exporter:latest
     command:
       - '--path.rootfs=/host'
-    network_mode: host # NOTE: Exposes port 9100 on system
     pid: host
     restart: unless-stopped
     volumes:
       - '/:/host:ro,rslave'
+    networks: *default-networks
     logging: *default-logging
+ 
+  # creates prometheus metrics for internal nginx
+  nginx-exporter:
+    container_name: nginx-exporter
+    image: nginx/nginx-prometheus-exporter:0.10.0
+    command:
+      - '-nginx.scrape-uri=http://nginx:8080'
+    restart: unless-stopped
+    networks: *default-networks
+    logging: *default-logging
+
 
 networks:
    loki:
