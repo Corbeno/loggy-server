@@ -18,9 +18,9 @@ services:
          - 80:80
          - 443:443
          - 3100:3100 # Loki
-         - 9090:9090 # Prometheus
-         - 9100:9100 # Node exporter could delete too
-         - 8080:8080 # delete probably, as nginx status is only needed internally
+         - 9090:9090 # Prometheus. Can disable this port unless needing to push directly to prometheus
+        #  - 9100:9100 # Node exporter. Not needed externally
+        #  - 8080:8080 # Nginx status. Not needed externally
       volumes:
          - ./nginx:/etc/nginx
          - ./nginx/certificates:/etc/nginx/certificates/
