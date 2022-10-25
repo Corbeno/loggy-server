@@ -52,6 +52,8 @@ services:
         - ./grafana:/var/lib/grafana
       environment:
         # GF_<SectionName>_<KeyName>
+        GF_SERVER_ROOT_URL: https://grafana/grafana
+        GF_SERVER_SERVE_FROM_SUB_PATH: true
         GF_DATAPROXY_MAX_IDLE_CONNECTIONS: '1000'
       networks: *default-networks
       logging: *default-logging
@@ -103,7 +105,7 @@ services:
     container_name: nginx-exporter
     image: nginx/nginx-prometheus-exporter:0.10.0
     command:
-      - '-nginx.scrape-uri=http://nginx:8080'
+      - '-nginx.scrape-uri=http://nginx/status'
     restart: unless-stopped
     networks: *default-networks
     logging: *default-logging
